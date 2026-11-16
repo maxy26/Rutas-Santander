@@ -7,55 +7,62 @@ public class PruebasRutas {
     private static int ok = 0, fallas = 0;
 
     public static void main(String[] args) throws Exception {
-        Grafo g = Grafo.cargar("datos/metrolinea.txt");
-        int portal = g.buscar("Portal Floridablanca"), quebrada = g.buscar("Quebradaseca");
-        int provenza = g.buscar("Provenza"), isla = g.buscar("La Isla");
+        Grafo g = Grafo.cargar("datos/santander.txt");
+        int bga = g.buscar("Bucaramanga"), sanGil = g.buscar("San Gil");
+        int piede = g.buscar("Piedecuesta"), giron = g.buscar("Girón");
 
         System.out.println("--- Casos normales ---");
-        verificar("Se cargan 22 estaciones", g.tamano() == 22);
+        verificar("Se cargan 21 municipios y 27 vías", g.tamano() == 21 && g.totalVias() == 27);
         verificar("La matriz es simétrica", simetrica(g));
-        Rutas.Resultado r = Rutas.dijkstra(g, portal, quebrada);
-        verificar("Hay ruta Portal Floridablanca -> Quebradaseca", r.existe());
-        verificar("Dijkstra coincide con fuerza bruta", r.minutos == Rutas.fuerzaBruta(g, portal, quebrada, Long.MAX_VALUE).minutos);
-        verificar("Los minutos del camino suman el total", Rutas.sumarMinutos(g, r.camino) == r.minutos);
-        Rutas.Resultado rp = Rutas.dijkstra(g, provenza, isla);
-        Rutas.Resultado bp = Rutas.menosParadas(g, provenza, isla);
-        verificar("Provenza -> La Isla: menos paradas usa el tramo directo (1 tramo)", bp.camino.length == 2);
-        verificar("Provenza -> La Isla: Dijkstra evita el trancón (" + rp.minutos + " < " + bp.minutos + " min)", rp.minutos < bp.minutos);
+        Rutas.Resultado r = Rutas.dijkstra(g, bga, sanGil);
+        verificar("Hay ruta Bucaramanga -> San Gil (" + r.km + " km)", r.existe());
+        verificar("Dijkstra coincide con fuerza bruta", r.km == Rutas.fuerzaBruta(g, bga, sanGil, Long.MAX_VALUE).km);
+        verificar("Los km del camino suman el total", Rutas.sumarKm(g, r.camino) == r.km);
+        Rutas.Resultado rp = Rutas.dijkstra(g, piede, giron);
+        Rutas.Resultado bp = Rutas.menosParadas(g, piede, giron);
+        verificar("Piedecuesta -> Girón: menos paradas pasa por Bucaramanga", bp.camino.length == 3 && bp.camino[1] == bga);
+        verificar("Piedecuesta -> Girón: Dijkstra va por Floridablanca (" + rp.km + " < " + bp.km + " km)",
+                rp.km < bp.km && rp.camino[1] == g.buscar("Floridablanca"));
 
         System.out.println("--- Casos límite ---");
-        Rutas.Resultado mismo = Rutas.dijkstra(g, provenza, provenza);
-        verificar("Origen igual a destino: 0 min y una sola estación", mismo.minutos == 0 && mismo.camino.length == 1);
+        Rutas.Resultado mismo = Rutas.dijkstra(g, bga, bga);
+        verificar("Origen igual a destino: 0 km y un solo municipio", mismo.km == 0 && mismo.camino.length == 1);
         Grafo vacio = new Grafo();
-        verificar("Grafo vacío", vacio.estaVacio() && vacio.totalTramos() == 0);
+        verificar("Grafo vacío", vacio.estaVacio() && vacio.totalVias() == 0);
         Grafo lleno = new Grafo();
-        for (int i = 0; i < Grafo.MAX; i++) lleno.agregarEstacion("E" + i, "x");
-        verificar("Grafo lleno rechaza otra estación", lanza(() -> lleno.agregarEstacion("Otra", "x")));
-        Grafo copia = Grafo.cargar("datos/metrolinea.txt");
-        copia.eliminarTramo(copia.buscar("Provenza"), copia.buscar("Diamante"));
-        Rutas.Resultado desvio = Rutas.dijkstra(copia, copia.buscar("Provenza"), copia.buscar("Quebradaseca"));
-        verificar("Con Provenza-Diamante cerrado, Dijkstra usa el desvío por La Isla", desvio.existe()
-                && desvio.camino[1] == copia.buscar("La Isla"));
-        copia.eliminarTramo(copia.buscar("Provenza"), copia.buscar("La Isla"));
-        verificar("Cerrando también Provenza-La Isla la red queda partida: no hay ruta al norte",
-                !Rutas.dijkstra(copia, copia.buscar("Provenza"), copia.buscar("Quebradaseca")).existe());
-        int telebu = copia.buscar("Telebucaramanga");
-        copia.eliminarEstacion(copia.buscar("Villabel"));
-        verificar("Eliminar estación conserva los demás tramos", copia.peso(copia.buscar("Telebucaramanga"), copia.buscar("Provenza")) == 9
-                && copia.tamano() == 21 && telebu >= 0);
-        int sola = copia.agregarEstacion("Estación aislada", "x");
-        verificar("Estación sin tramos: no hay ruta", !Rutas.dijkstra(copia, sola, 0).existe());
+        for (int i = 0; i < Grafo.MAX; i++) lleno.agregarMunicipio("M" + i, "x");
+        verificar("Grafo lleno rechaza otro municipio", lanza(() -> lleno.agregarMunicipio("Otro", "x")));
+        Grafo copia = Grafo.cargar("datos/santander.txt");
+        int cB = copia.buscar("Bucaramanga"), cG = copia.buscar("Girón"), cBarr = copia.buscar("Barrancabermeja");
+        copia.eliminarVia(cG, copia.buscar("Lebrija"));
+        Rutas.Resultado desvio = Rutas.dijkstra(copia, cB, cBarr);
+        verificar("Con Girón-Lebrija cerrada, Dijkstra desvía por Zapatoca (" + desvio.km + " km)", desvio.existe()
+                && contiene(desvio.camino, copia.buscar("Zapatoca")));
+        copia.eliminarVia(cG, copia.buscar("Zapatoca"));
+        copia.eliminarVia(cB, copia.buscar("Rionegro"));
+        verificar("Cerrando también Girón-Zapatoca y Bucaramanga-Rionegro la red queda partida",
+                !Rutas.dijkstra(copia, cB, cBarr).existe());
+        copia.eliminarMunicipio(copia.buscar("Curití"));
+        verificar("Eliminar un municipio conserva las demás vías", copia.tamano() == 20
+                && copia.peso(copia.buscar("Aratoca"), copia.buscar("San Gil")) == g.peso(g.buscar("Aratoca"), sanGil));
+        int solo = copia.agregarMunicipio("Municipio aislado", "x");
+        verificar("Municipio sin vías: no hay ruta", !Rutas.dijkstra(copia, solo, 0).existe());
 
         System.out.println("--- Casos de error ---");
-        verificar("Estación repetida se rechaza", lanza(() -> g.agregarEstacion("provenza", "x")));
-        verificar("Nombre vacío se rechaza", lanza(() -> g.agregarEstacion("  ", "x")));
-        verificar("Minutos negativos se rechazan", lanza(() -> g.agregarTramo(0, 1, -5)));
-        verificar("Tramo de una estación consigo misma se rechaza", lanza(() -> g.agregarTramo(2, 2, 3)));
-        verificar("Estación inexistente se rechaza", lanza(() -> g.grado(99)));
-        verificar("Buscar un nombre que no existe devuelve -1", g.buscar("Estación Marte") == -1);
+        verificar("Municipio repetido se rechaza (sin importar mayúsculas)", lanza(() -> g.agregarMunicipio("bucaramanga", "x")));
+        verificar("Nombre vacío se rechaza", lanza(() -> g.agregarMunicipio("  ", "x")));
+        verificar("Kilómetros negativos se rechazan", lanza(() -> g.agregarVia(0, 1, -5)));
+        verificar("Vía de un municipio consigo mismo se rechaza", lanza(() -> g.agregarVia(2, 2, 3)));
+        verificar("Municipio inexistente se rechaza", lanza(() -> g.grado(99)));
+        verificar("Buscar un nombre que no existe devuelve -1", g.buscar("Municipio Marte") == -1);
 
         System.out.println("\nResultado: " + ok + " correctas, " + fallas + " fallidas.");
         if (fallas > 0) System.exit(1);
+    }
+
+    private static boolean contiene(int[] c, int x) {
+        for (int v : c) if (v == x) return true;
+        return false;
     }
 
     private static boolean simetrica(Grafo g) {

@@ -1,24 +1,23 @@
-# Posición de cada estación en el mapa de la ventana (x;y en píxeles). Solo sirve para dibujar.
-# El norte está arriba. Las estaciones se pueden mover con el ratón dentro del programa.
-Quebradaseca;430;50
-San Mateo;330;110
-Chorreras;300;175
-La Rosita;300;240
-La Isla;330;305
-Parque de los Niños;560;120
-Gabriel Turbay;580;210
-Antonia Santos;500;300
-Diamante;430;375
-Provenza;430;460
-Lagos;430;545
-Cañaveral;450;620
-Molinos;400;685
-Hormigueros;330;720
-Payador;250;730
-Portal Floridablanca;170;700
-CC Cañaveral;580;660
-Villabel;690;590
-Telebucaramanga;680;480
-Transversal 29;250;460
-CAI Niza;170;545
-La Calleja;120;630
+# Posición de cada municipio en el mapa (x;y en píxeles), calculada a partir de su latitud y longitud.
+# El norte está arriba. Los municipios se pueden mover con el ratón dentro del programa.
+Bucaramanga;640;185
+Floridablanca;672;268
+Girón;590;255
+Piedecuesta;735;305
+Lebrija;510;205
+Rionegro;612;123
+Matanza;711;88
+Los Santos;647;428
+Zapatoca;524;392
+Barrancabermeja;88;242
+Sabana de Torres;352;47
+San Vicente de Chucurí;418;352
+Aratoca;709;464
+San Gil;623;548
+Barichara;557;500
+Socorro;530;600
+Curití;740;525
+Mogotes;770;615
+Charalá;614;708
+Oiba;501;721
+Puerto Wilches;56;73

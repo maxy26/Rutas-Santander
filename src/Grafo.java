@@ -5,18 +5,18 @@ import java.io.IOException;
 /**
  * Grafo ponderado no dirigido implementado con MATRIZ DE ADYACENCIA.
  *
- * - Cada estación es un nodo (vértice) identificado por su posición 0..n-1.
- * - ady[i][j] guarda los minutos del tramo entre i y j; 0 significa "no hay tramo".
+ * - Cada municipio es un nodo (vértice) identificado por su posición 0..n-1.
+ * - ady[i][j] guarda los km de la vía entre i y j; 0 significa "no hay vía".
  * - Como el bus va en ambos sentidos, la matriz es simétrica: ady[i][j] == ady[j][i].
  */
 public class Grafo {
 
-    public static final int MAX = 60;          // capacidad máxima de estaciones
+    public static final int MAX = 60;          // capacidad máxima de municipios
 
     private final String[] nombres = new String[MAX];
-    private final String[] troncales = new String[MAX];
+    private final String[] provincias = new String[MAX];
     private final int[][] ady = new int[MAX][MAX];
-    private int n = 0;                          // estaciones registradas
+    private int n = 0;                          // municipios registradas
 
     // ------------------------------------------------------------ consultas básicas
 
@@ -24,7 +24,7 @@ public class Grafo {
     public boolean estaVacio() { return n == 0; }
     public boolean estaLleno() { return n == MAX; }
     public String nombre(int i) { return nombres[i]; }
-    public String troncal(int i) { return troncales[i]; }
+    public String provincia(int i) { return provincias[i]; }
     public int peso(int i, int j) { return ady[i][j]; }
 
     /** Búsqueda secuencial por nombre, sin importar mayúsculas. O(n). Devuelve -1 si no existe. */
@@ -37,31 +37,31 @@ public class Grafo {
 
     // ------------------------------------------------------------ insertar
 
-    /** Agrega una estación al final. O(n) por la búsqueda de repetidos. */
-    public int agregarEstacion(String nombre, String troncal) {
+    /** Agrega un municipio al final. O(n) por la búsqueda de repetidos. */
+    public int agregarMunicipio(String nombre, String provincia) {
         if (nombre == null || nombre.trim().isEmpty()) throw new IllegalArgumentException("El nombre no puede estar vacío.");
-        if (estaLleno()) throw new IllegalStateException("El grafo está lleno (máximo " + MAX + " estaciones).");
-        if (buscar(nombre) != -1) throw new IllegalArgumentException("La estación '" + nombre + "' ya existe.");
+        if (estaLleno()) throw new IllegalStateException("El grafo está lleno (máximo " + MAX + " municipios).");
+        if (buscar(nombre) != -1) throw new IllegalArgumentException("El municipio '" + nombre + "' ya existe.");
         nombres[n] = nombre.trim();
-        troncales[n] = troncal.trim();
-        // La fila y la columna nuevas ya están en 0 (sin tramos)
+        provincias[n] = provincia.trim();
+        // La fila y la columna nuevas ya están en 0 (sin vías)
         return n++;
     }
 
-    /** Agrega o actualiza el tramo entre dos estaciones. O(1). */
-    public void agregarTramo(int a, int b, int minutos) {
+    /** Agrega o actualiza la vía entre dos municipios. O(1). */
+    public void agregarVia(int a, int b, int km) {
         validar(a);
         validar(b);
-        if (a == b) throw new IllegalArgumentException("Un tramo no puede unir una estación consigo misma.");
-        if (minutos <= 0) throw new IllegalArgumentException("Los minutos deben ser mayores que 0.");
-        ady[a][b] = minutos;
-        ady[b][a] = minutos;   // no dirigido: matriz simétrica
+        if (a == b) throw new IllegalArgumentException("Una vía no puede unir un municipio consigo mismo.");
+        if (km <= 0) throw new IllegalArgumentException("Los km deben ser mayores que 0.");
+        ady[a][b] = km;
+        ady[b][a] = km;   // no dirigido: matriz simétrica
     }
 
     // ------------------------------------------------------------ eliminar
 
-    /** Quita el tramo entre dos estaciones. O(1). */
-    public boolean eliminarTramo(int a, int b) {
+    /** Quita la vía entre dos municipios. O(1). */
+    public boolean eliminarVia(int a, int b) {
         validar(a);
         validar(b);
         if (ady[a][b] == 0) return false;
@@ -71,14 +71,14 @@ public class Grafo {
     }
 
     /**
-     * Elimina una estación y todos sus tramos. O(n²):
+     * Elimina un municipio y todos sus vías. O(n²):
      * se corren una posición hacia arriba las filas y hacia la izquierda las columnas siguientes.
      */
-    public void eliminarEstacion(int k) {
+    public void eliminarMunicipio(int k) {
         validar(k);
         for (int i = k; i < n - 1; i++) {
             nombres[i] = nombres[i + 1];
-            troncales[i] = troncales[i + 1];
+            provincias[i] = provincias[i + 1];
         }
         for (int i = k; i < n - 1; i++)            // filas
             for (int j = 0; j < n; j++) ady[i][j] = ady[i + 1][j];
@@ -89,13 +89,13 @@ public class Grafo {
             ady[i][n - 1] = 0;
         }
         nombres[n - 1] = null;
-        troncales[n - 1] = null;
+        provincias[n - 1] = null;
         n--;
     }
 
     // ------------------------------------------------------------ recorrer
 
-    /** Grado del nodo = número de tramos que llegan a la estación. O(n). */
+    /** Grado del nodo = número de vías que llegan al municipio. O(n). */
     public int grado(int i) {
         validar(i);
         int g = 0;
@@ -103,7 +103,7 @@ public class Grafo {
         return g;
     }
 
-    public int totalTramos() {
+    public int totalVias() {
         int t = 0;
         for (int i = 0; i < n; i++)
             for (int j = i + 1; j < n; j++) if (ady[i][j] > 0) t++;
@@ -121,19 +121,19 @@ public class Grafo {
             sb.append('\n');
         }
         System.out.print(sb);
-        System.out.println("(los números son minutos; '.' = no hay tramo)");
+        System.out.println("(los números son km; '.' = no hay vía)");
     }
 
     private void validar(int i) {
-        if (i < 0 || i >= n) throw new IllegalArgumentException("Estación inexistente: " + i);
+        if (i < 0 || i >= n) throw new IllegalArgumentException("Municipio inexistente: " + i);
     }
 
     // ------------------------------------------------------------ carga desde archivo
 
     /**
      * Lee el archivo de datos. Formato (las líneas con # son comentarios):
-     *   E;Nombre de la estación;Troncal
-     *   T;Estación A;Estación B;minutos
+     *   E;Nombre del municipio;Provincia
+     *   V;Municipio A;Municipio B;km
      */
     public static Grafo cargar(String ruta) throws IOException {
         Grafo g = new Grafo();
@@ -146,12 +146,12 @@ public class Grafo {
                 if (linea.isEmpty() || linea.startsWith("#")) continue;
                 String[] p = linea.split(";");
                 try {
-                    if (p[0].equals("E")) {
-                        g.agregarEstacion(p[1], p[2]);
-                    } else if (p[0].equals("T")) {
+                    if (p[0].equals("M")) {
+                        g.agregarMunicipio(p[1], p[2]);
+                    } else if (p[0].equals("V")) {
                         int a = g.buscar(p[1]), b = g.buscar(p[2]);
-                        if (a == -1 || b == -1) throw new IllegalArgumentException("estación no declarada");
-                        g.agregarTramo(a, b, Integer.parseInt(p[3].trim()));
+                        if (a == -1 || b == -1) throw new IllegalArgumentException("municipio no declarado");
+                        g.agregarVia(a, b, Integer.parseInt(p[3].trim()));
                     }
                 } catch (RuntimeException e) {
                     throw new IOException("Error en la línea " + num + " del archivo: " + e.getMessage());

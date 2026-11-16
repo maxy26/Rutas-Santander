@@ -1,16 +1,16 @@
 /**
- * Algoritmos de rutas sobre el grafo de estaciones.
+ * Algoritmos de rutas sobre el grafo de municipios.
  *
- *  - dijkstra:          ruta más rápida (menor suma de minutos).            O(n²) con matriz.
- *  - menosParadas:      ruta con menos estaciones, recorrido en anchura.    O(n²) con matriz.
+ *  - dijkstra:          ruta más corta (menor suma de km).            O(n²) con matriz.
+ *  - menosParadas:      ruta con menos municipios, recorrido en anchura.    O(n²) con matriz.
  *  - fuerzaBruta:       prueba TODOS los caminos simples (recursivo).       O(n!) en el peor caso.
  */
 public class Rutas {
 
     /** Resultado de una búsqueda de ruta. */
     public static class Resultado {
-        public int[] camino;        // estaciones en orden, de origen a destino (vacío si no hay ruta)
-        public int minutos;         // suma de los pesos del camino
+        public int[] camino;        // municipios en orden, de origen a destino (vacío si no hay ruta)
+        public int km;         // suma de los pesos del camino
         public long operaciones;    // pasos contados, para comparar algoritmos
 
         public boolean existe() { return camino.length > 0; }
@@ -20,8 +20,8 @@ public class Rutas {
 
     public static Resultado dijkstra(Grafo g, int origen, int destino) {
         int n = g.tamano();
-        int[] dist = new int[n];          // mejor distancia conocida desde el origen
-        int[] previo = new int[n];        // estación anterior en el mejor camino
+        int[] dist = new int[n];          // mejor distancia conocida desdel origen
+        int[] previo = new int[n];        // municipio anterior en el mejor camino
         boolean[] visitado = new boolean[n];
         long ops = 0;
 
@@ -32,7 +32,7 @@ public class Rutas {
         dist[origen] = 0;
 
         for (int paso = 0; paso < n; paso++) {
-            // 1. Elegir la estación no visitada con menor distancia
+            // 1. Elegir el municipio no visitada con menor distancia
             int u = -1;
             for (int i = 0; i < n; i++) {
                 ops++;
@@ -41,7 +41,7 @@ public class Rutas {
             if (u == -1 || u == destino) break;   // no quedan alcanzables, o ya llegamos
             visitado[u] = true;
 
-            // 2. Relajar: ¿pasar por u mejora el camino a cada vecino v?
+            // 2. Relajar: ¿pasar por u mejoral camino a cada vecino v?
             for (int v = 0; v < n; v++) {
                 ops++;
                 int w = g.peso(u, v);
@@ -52,7 +52,7 @@ public class Rutas {
             }
         }
         Resultado r = reconstruir(previo, origen, destino, dist[destino] == Integer.MAX_VALUE);
-        r.minutos = r.existe() ? dist[destino] : 0;
+        r.km = r.existe() ? dist[destino] : 0;
         r.operaciones = ops;
         return r;
     }
@@ -83,7 +83,7 @@ public class Rutas {
             }
         }
         Resultado r = reconstruir(previo, origen, destino, !visitado[destino]);
-        r.minutos = sumarMinutos(g, r.camino);
+        r.km = sumarKm(g, r.camino);
         r.operaciones = ops;
         return r;
     }
@@ -91,18 +91,18 @@ public class Rutas {
     // ================================================================= FUERZA BRUTA
 
     private static int[] mejorCamino;
-    private static int mejorMinutos;
+    private static int mejorKilómetros;
     private static long opsFuerza;
     private static long limite;
 
     /**
      * Explora recursivamente todos los caminos simples y se queda con el más corto.
-     * Si se supera el límite de operaciones se detiene y devuelve operaciones = -1.
+     * Si se superal límite de operaciones se detiene y devuelve operaciones = -1.
      */
     public static Resultado fuerzaBruta(Grafo g, int origen, int destino, long limiteOperaciones) {
         int n = g.tamano();
         mejorCamino = new int[0];
-        mejorMinutos = Integer.MAX_VALUE;
+        mejorKilómetros = Integer.MAX_VALUE;
         opsFuerza = 0;
         limite = limiteOperaciones;
         int[] camino = new int[n];
@@ -113,16 +113,16 @@ public class Rutas {
 
         Resultado r = new Resultado();
         r.camino = mejorCamino;
-        r.minutos = mejorCamino.length > 0 ? mejorMinutos : 0;
+        r.km = mejorCamino.length > 0 ? mejorKilómetros : 0;
         r.operaciones = completo ? opsFuerza : -1;
         return r;
     }
 
-    private static boolean explorar(Grafo g, int destino, int[] camino, int largo, boolean[] enCamino, int minutos) {
+    private static boolean explorar(Grafo g, int destino, int[] camino, int largo, boolean[] enCamino, int km) {
         int u = camino[largo - 1];
         if (u == destino) {                                   // caso base: llegamos
-            if (minutos < mejorMinutos) {
-                mejorMinutos = minutos;
+            if (km < mejorKilómetros) {
+                mejorKilómetros = km;
                 mejorCamino = java.util.Arrays.copyOf(camino, largo);
             }
             return true;
@@ -133,7 +133,7 @@ public class Rutas {
             if (w > 0 && !enCamino[v]) {
                 camino[largo] = v;
                 enCamino[v] = true;
-                if (!explorar(g, destino, camino, largo + 1, enCamino, minutos + w)) return false;
+                if (!explorar(g, destino, camino, largo + 1, enCamino, km + w)) return false;
                 enCamino[v] = false;                          // vuelta atrás (backtracking)
             }
         }
@@ -142,7 +142,7 @@ public class Rutas {
 
     // ================================================================= auxiliares
 
-    /** Reconstruye el camino desde el destino hacia atrás usando una PILA. */
+    /** Reconstruye el camino desdel destino hacia atrás usando una PILA. */
     private static Resultado reconstruir(int[] previo, int origen, int destino, boolean sinRuta) {
         Resultado r = new Resultado();
         if (sinRuta) {
@@ -156,7 +156,7 @@ public class Rutas {
         return r;
     }
 
-    public static int sumarMinutos(Grafo g, int[] camino) {
+    public static int sumarKm(Grafo g, int[] camino) {
         int s = 0;
         for (int i = 0; i + 1 < camino.length; i++) s += g.peso(camino[i], camino[i + 1]);
         return s;
