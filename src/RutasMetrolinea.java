@@ -69,6 +69,7 @@ public class RutasMetrolinea {
         if (g.tamano() < 2) { System.out.println("Se necesitan al menos dos estaciones."); return; }
         int o = leerEstacion("Estación de origen (número o nombre): ");
         int d = leerEstacion("Estación de destino (número o nombre): ");
+        if (o == d) { System.out.println("El origen y el destino son la misma estación: 0 min."); return; }
 
         Rutas.Resultado rapida = Rutas.dijkstra(g, o, d);
         if (!rapida.existe()) {
@@ -150,6 +151,7 @@ public class RutasMetrolinea {
     private static void agregarTramo() {
         int a = leerEstacion("Estación A: ");
         int b = leerEstacion("Estación B: ");
+        if (a == b) throw new IllegalArgumentException("Un tramo no puede unir una estación consigo misma.");
         int m = leerEntero("Minutos del tramo: ");
         g.agregarTramo(a, b, m);
         System.out.println("Tramo " + g.nombre(a) + " - " + g.nombre(b) + " = " + m + " min.");
