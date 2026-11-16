@@ -1,0 +1,24 @@
+# Posición de cada estación en el mapa de la ventana (x;y en píxeles). Solo sirve para dibujar.
+# El norte está arriba. Las estaciones se pueden mover con el ratón dentro del programa.
+Quebradaseca;430;50
+San Mateo;330;110
+Chorreras;300;175
+La Rosita;300;240
+La Isla;330;305
+Parque de los Niños;560;120
+Gabriel Turbay;580;210
+Antonia Santos;500;300
+Diamante;430;375
+Provenza;430;460
+Lagos;430;545
+Cañaveral;450;620
+Molinos;400;685
+Hormigueros;330;720
+Payador;250;730
+Portal Floridablanca;170;700
+CC Cañaveral;580;660
+Villabel;690;590
+Telebucaramanga;680;480
+Transversal 29;250;460
+CAI Niza;170;545
+La Calleja;120;630
