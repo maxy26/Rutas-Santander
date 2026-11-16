@@ -1,0 +1,62 @@
+# Red simplificada de Metrolínea (área metropolitana de Bucaramanga)
+# Nombres de estaciones: reales (troncales del sistema).
+# Minutos entre estaciones: ESTIMADOS para el modelo académico, no son datos oficiales.
+# Formato:  E;Estación;Troncal      T;Estación A;Estación B;minutos
+#
+# ---------------- Estaciones ----------------
+E;Portal Floridablanca;Floridablanca
+E;Payador;Floridablanca
+E;Hormigueros;Floridablanca
+E;Molinos;Floridablanca
+E;Cañaveral;Floridablanca
+E;Lagos;Floridablanca
+E;Provenza;Autopista
+E;Diamante;Autopista
+E;Antonia Santos;Autopista
+E;La Isla;Libertador
+E;La Rosita;Libertador
+E;Chorreras;Libertador
+E;San Mateo;Libertador
+E;Quebradaseca;Libertador
+E;CC Cañaveral;Villabel
+E;Villabel;Villabel
+E;Telebucaramanga;Villabel
+E;Transversal 29;La Cumbre
+E;CAI Niza;La Cumbre
+E;La Calleja;La Cumbre
+E;Gabriel Turbay;Próspero Pinzón
+E;Parque de los Niños;Próspero Pinzón
+#
+# ---------------- Tramos (minutos estimados) ----------------
+# Troncal Floridablanca y Autopista (corredor principal sur-norte)
+T;Portal Floridablanca;Payador;3
+T;Payador;Hormigueros;2
+T;Hormigueros;Molinos;2
+T;Molinos;Cañaveral;2
+T;Cañaveral;Lagos;3
+T;Lagos;Provenza;4
+T;Provenza;Diamante;3
+T;Diamante;Antonia Santos;3
+# Troncal Libertador (centro)
+T;Antonia Santos;La Isla;3
+T;Diamante;La Isla;6
+T;La Isla;La Rosita;2
+T;La Rosita;Chorreras;3
+T;Chorreras;San Mateo;2
+T;San Mateo;Quebradaseca;3
+# Corredor Próspero Pinzón (alternativa hacia el norte)
+T;Antonia Santos;Gabriel Turbay;4
+T;Gabriel Turbay;Parque de los Niños;3
+T;Parque de los Niños;Quebradaseca;5
+# Alimentadora Villabel (Floridablanca oriente)
+T;Cañaveral;CC Cañaveral;2
+T;CC Cañaveral;Villabel;4
+T;Villabel;Telebucaramanga;3
+T;Telebucaramanga;Provenza;9
+# Alimentadora La Cumbre
+T;Provenza;Transversal 29;4
+T;Transversal 29;CAI Niza;3
+T;CAI Niza;La Calleja;4
+T;La Calleja;Portal Floridablanca;7
+# Vía directa con trancón: pocas paradas pero lenta
+T;Provenza;La Isla;14
