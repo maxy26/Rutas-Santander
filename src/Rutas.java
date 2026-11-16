@@ -1,7 +1,7 @@
 /**
  * Algoritmos de rutas sobre el grafo de municipios.
  *
- *  - dijkstra:          ruta más corta (menor suma de km).            O(n²) con matriz.
+ *  - dijkstra:          ruta más corta (menos km) o más rápida (menos minutos).  O(n²) con matriz.
  *  - menosParadas:      ruta con menos municipios, recorrido en anchura.    O(n²) con matriz.
  *  - fuerzaBruta:       prueba TODOS los caminos simples (recursivo).       O(n!) en el peor caso.
  */
@@ -10,7 +10,8 @@ public class Rutas {
     /** Resultado de una búsqueda de ruta. */
     public static class Resultado {
         public int[] camino;        // municipios en orden, de origen a destino (vacío si no hay ruta)
-        public int km;         // suma de los pesos del camino
+        public int km;              // suma de los km del camino
+        public int minutos;         // suma de los minutos del camino
         public long operaciones;    // pasos contados, para comparar algoritmos
 
         public boolean existe() { return camino.length > 0; }
@@ -18,9 +19,15 @@ public class Rutas {
 
     // ================================================================= DIJKSTRA
 
+    /** Ruta más corta en km. */
     public static Resultado dijkstra(Grafo g, int origen, int destino) {
+        return dijkstra(g, origen, destino, false);
+    }
+
+    /** Si porTiempo es true, el peso de cada vía son sus minutos; si no, sus km. */
+    public static Resultado dijkstra(Grafo g, int origen, int destino, boolean porTiempo) {
         int n = g.tamano();
-        int[] dist = new int[n];          // mejor distancia conocida desdel origen
+        int[] dist = new int[n];          // mejor distancia conocida desde el origen
         int[] previo = new int[n];        // municipio anterior en el mejor camino
         boolean[] visitado = new boolean[n];
         long ops = 0;
@@ -32,7 +39,7 @@ public class Rutas {
         dist[origen] = 0;
 
         for (int paso = 0; paso < n; paso++) {
-            // 1. Elegir el municipio no visitada con menor distancia
+            // 1. Elegir el municipio no visitado con menor distancia
             int u = -1;
             for (int i = 0; i < n; i++) {
                 ops++;
@@ -41,10 +48,10 @@ public class Rutas {
             if (u == -1 || u == destino) break;   // no quedan alcanzables, o ya llegamos
             visitado[u] = true;
 
-            // 2. Relajar: ¿pasar por u mejoral camino a cada vecino v?
+            // 2. Relajar: ¿pasar por u mejora el camino a cada vecino v?
             for (int v = 0; v < n; v++) {
                 ops++;
-                int w = g.peso(u, v);
+                int w = porTiempo ? g.minutos(u, v) : g.peso(u, v);
                 if (w > 0 && !visitado[v] && dist[u] + w < dist[v]) {
                     dist[v] = dist[u] + w;
                     previo[v] = u;
@@ -52,7 +59,8 @@ public class Rutas {
             }
         }
         Resultado r = reconstruir(previo, origen, destino, dist[destino] == Integer.MAX_VALUE);
-        r.km = r.existe() ? dist[destino] : 0;
+        r.km = sumarKm(g, r.camino);
+        r.minutos = sumarMinutos(g, r.camino);
         r.operaciones = ops;
         return r;
     }
@@ -84,6 +92,7 @@ public class Rutas {
         }
         Resultado r = reconstruir(previo, origen, destino, !visitado[destino]);
         r.km = sumarKm(g, r.camino);
+        r.minutos = sumarMinutos(g, r.camino);
         r.operaciones = ops;
         return r;
     }
@@ -91,18 +100,18 @@ public class Rutas {
     // ================================================================= FUERZA BRUTA
 
     private static int[] mejorCamino;
-    private static int mejorKilómetros;
+    private static int mejorKm;
     private static long opsFuerza;
     private static long limite;
 
     /**
      * Explora recursivamente todos los caminos simples y se queda con el más corto.
-     * Si se superal límite de operaciones se detiene y devuelve operaciones = -1.
+     * Si se supera el límite de operaciones se detiene y devuelve operaciones = -1.
      */
     public static Resultado fuerzaBruta(Grafo g, int origen, int destino, long limiteOperaciones) {
         int n = g.tamano();
         mejorCamino = new int[0];
-        mejorKilómetros = Integer.MAX_VALUE;
+        mejorKm = Integer.MAX_VALUE;
         opsFuerza = 0;
         limite = limiteOperaciones;
         int[] camino = new int[n];
@@ -113,7 +122,7 @@ public class Rutas {
 
         Resultado r = new Resultado();
         r.camino = mejorCamino;
-        r.km = mejorCamino.length > 0 ? mejorKilómetros : 0;
+        r.km = mejorCamino.length > 0 ? mejorKm : 0;
         r.operaciones = completo ? opsFuerza : -1;
         return r;
     }
@@ -121,8 +130,8 @@ public class Rutas {
     private static boolean explorar(Grafo g, int destino, int[] camino, int largo, boolean[] enCamino, int km) {
         int u = camino[largo - 1];
         if (u == destino) {                                   // caso base: llegamos
-            if (km < mejorKilómetros) {
-                mejorKilómetros = km;
+            if (km < mejorKm) {
+                mejorKm = km;
                 mejorCamino = java.util.Arrays.copyOf(camino, largo);
             }
             return true;
@@ -142,7 +151,7 @@ public class Rutas {
 
     // ================================================================= auxiliares
 
-    /** Reconstruye el camino desdel destino hacia atrás usando una PILA. */
+    /** Reconstruye el camino desde el destino hacia atrás usando una PILA. */
     private static Resultado reconstruir(int[] previo, int origen, int destino, boolean sinRuta) {
         Resultado r = new Resultado();
         if (sinRuta) {
@@ -154,6 +163,17 @@ public class Rutas {
         r.camino = new int[pila.tamano()];
         for (int i = 0; i < r.camino.length; i++) r.camino[i] = pila.desapilar();
         return r;
+    }
+
+    public static int sumarMinutos(Grafo g, int[] camino) {
+        int s = 0;
+        for (int i = 0; i + 1 < camino.length; i++) s += g.minutos(camino[i], camino[i + 1]);
+        return s;
+    }
+
+    /** Convierte minutos a texto: 98 -> "1 h 38 min". */
+    public static String tiempo(int min) {
+        return min < 60 ? min + " min" : (min / 60) + " h " + String.format("%02d", min % 60) + " min";
     }
 
     public static int sumarKm(Grafo g, int[] camino) {

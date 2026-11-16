@@ -7,7 +7,8 @@ import java.io.IOException;
  *
  * - Cada municipio es un nodo (vértice) identificado por su posición 0..n-1.
  * - ady[i][j] guarda los km de la vía entre i y j; 0 significa "no hay vía".
- * - Como el bus va en ambos sentidos, la matriz es simétrica: ady[i][j] == ady[j][i].
+ * - tiempo[i][j] guarda los minutos que se tarda en recorrer esa misma vía.
+ * - Como las vías son de doble sentido, las matrices son simétricas: ady[i][j] == ady[j][i].
  */
 public class Grafo {
 
@@ -15,8 +16,9 @@ public class Grafo {
 
     private final String[] nombres = new String[MAX];
     private final String[] provincias = new String[MAX];
-    private final int[][] ady = new int[MAX][MAX];
-    private int n = 0;                          // municipios registradas
+    private final int[][] ady = new int[MAX][MAX];      // km
+    private final int[][] tiempo = new int[MAX][MAX];   // minutos
+    private int n = 0;                          // municipios registrados
 
     // ------------------------------------------------------------ consultas básicas
 
@@ -26,6 +28,7 @@ public class Grafo {
     public String nombre(int i) { return nombres[i]; }
     public String provincia(int i) { return provincias[i]; }
     public int peso(int i, int j) { return ady[i][j]; }
+    public int minutos(int i, int j) { return tiempo[i][j]; }
 
     /** Búsqueda secuencial por nombre, sin importar mayúsculas. O(n). Devuelve -1 si no existe. */
     public int buscar(String nombre) {
@@ -48,14 +51,17 @@ public class Grafo {
         return n++;
     }
 
-    /** Agrega o actualiza la vía entre dos municipios. O(1). */
-    public void agregarVia(int a, int b, int km) {
+    /** Agrega o actualiza la vía entre dos municipios, con su distancia y su tiempo. O(1). */
+    public void agregarVia(int a, int b, int km, int min) {
         validar(a);
         validar(b);
         if (a == b) throw new IllegalArgumentException("Una vía no puede unir un municipio consigo mismo.");
         if (km <= 0) throw new IllegalArgumentException("Los km deben ser mayores que 0.");
+        if (min <= 0) throw new IllegalArgumentException("Los minutos deben ser mayores que 0.");
         ady[a][b] = km;
         ady[b][a] = km;   // no dirigido: matriz simétrica
+        tiempo[a][b] = min;
+        tiempo[b][a] = min;
     }
 
     // ------------------------------------------------------------ eliminar
@@ -67,11 +73,13 @@ public class Grafo {
         if (ady[a][b] == 0) return false;
         ady[a][b] = 0;
         ady[b][a] = 0;
+        tiempo[a][b] = 0;
+        tiempo[b][a] = 0;
         return true;
     }
 
     /**
-     * Elimina un municipio y todos sus vías. O(n²):
+     * Elimina un municipio y todas sus vías. O(n²):
      * se corren una posición hacia arriba las filas y hacia la izquierda las columnas siguientes.
      */
     public void eliminarMunicipio(int k) {
@@ -80,13 +88,15 @@ public class Grafo {
             nombres[i] = nombres[i + 1];
             provincias[i] = provincias[i + 1];
         }
-        for (int i = k; i < n - 1; i++)            // filas
-            for (int j = 0; j < n; j++) ady[i][j] = ady[i + 1][j];
-        for (int j = k; j < n - 1; j++)            // columnas
-            for (int i = 0; i < n; i++) ady[i][j] = ady[i][j + 1];
-        for (int i = 0; i < n; i++) {               // limpiar la última fila y columna
-            ady[n - 1][i] = 0;
-            ady[i][n - 1] = 0;
+        for (int[][] m : new int[][][]{ady, tiempo}) {   // se hace igual en las dos matrices
+            for (int i = k; i < n - 1; i++)            // filas
+                for (int j = 0; j < n; j++) m[i][j] = m[i + 1][j];
+            for (int j = k; j < n - 1; j++)            // columnas
+                for (int i = 0; i < n; i++) m[i][j] = m[i][j + 1];
+            for (int i = 0; i < n; i++) {               // limpiar la última fila y columna
+                m[n - 1][i] = 0;
+                m[i][n - 1] = 0;
+            }
         }
         nombres[n - 1] = null;
         provincias[n - 1] = null;
@@ -132,8 +142,8 @@ public class Grafo {
 
     /**
      * Lee el archivo de datos. Formato (las líneas con # son comentarios):
-     *   E;Nombre del municipio;Provincia
-     *   V;Municipio A;Municipio B;km
+     *   M;Nombre del municipio;Provincia
+     *   V;Municipio A;Municipio B;km;minutos
      */
     public static Grafo cargar(String ruta) throws IOException {
         Grafo g = new Grafo();
@@ -151,7 +161,7 @@ public class Grafo {
                     } else if (p[0].equals("V")) {
                         int a = g.buscar(p[1]), b = g.buscar(p[2]);
                         if (a == -1 || b == -1) throw new IllegalArgumentException("municipio no declarado");
-                        g.agregarVia(a, b, Integer.parseInt(p[3].trim()));
+                        g.agregarVia(a, b, Integer.parseInt(p[3].trim()), Integer.parseInt(p[4].trim()));
                     }
                 } catch (RuntimeException e) {
                     throw new IOException("Error en la línea " + num + " del archivo: " + e.getMessage());

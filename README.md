@@ -2,12 +2,12 @@
 
 Proyecto final de Estructuras de Datos (E193, UTS, 2026B).
 
-Calcula la ruta más corta por carretera entre municipios de Santander (Colombia). Para eso usa un **grafo ponderado no dirigido** implementado con **matriz de adyacencia** y el **algoritmo de Dijkstra**.
+Calcula la ruta más corta (km) o la más rápida (tiempo en carro) por carretera entre municipios de Santander (Colombia). Para eso usa un **grafo ponderado no dirigido** implementado con **matriz de adyacencia** y el **algoritmo de Dijkstra**.
 
 ## Qué hace
 
-- Dibuja el mapa de 21 municipios y 27 vías.
-- Calcula la ruta más corta con Dijkstra y la compara con la ruta de menos paradas (recorrido en anchura con una cola).
+- Dibuja el mapa de 21 municipios y 27 vías, con los km o el tiempo de cada vía.
+- Calcula con Dijkstra la ruta más corta o la más rápida, y la compara con la ruta de menos paradas (recorrido en anchura con una cola). No siempre coinciden: de Socorro a Charalá lo más corto es ir por Oiba (54 km) y lo más rápido por San Gil (1 h 19 min).
 - Agrega municipios y vías, cierra vías (por ejemplo, por un derrumbe) y elimina municipios.
 - Mide Dijkstra contra la fuerza bruta, que prueba todos los caminos, en grafos cada vez más grandes.
 
@@ -20,10 +20,10 @@ Calcula la ruta más corta por carretera entre municipios de Santander (Colombia
 | `src/VentanaRutas.java` | Ventana con el mapa (Swing) |
 | `src/RutasSantander.java` | Versión de consola |
 | `src/PruebasRutas.java` | Casos normales, límite y de error |
-| `datos/santander.txt` | Municipios, provincias y kilómetros de cada vía |
+| `datos/santander.txt` | Municipios, provincias, kilómetros y minutos de cada vía |
 | `datos/posiciones.txt` | Posición de cada municipio en el mapa |
 
-Las distancias son kilómetros por carretera calculados con [OSRM](https://project-osrm.org/) sobre los mapas de [OpenStreetMap](https://www.openstreetmap.org/), redondeados al kilómetro. La red es una simplificación: solo incluye las vías principales entre estos municipios.
+Las distancias (km) y los tiempos en carro sin trancones (minutos) se calcularon con [OSRM](https://project-osrm.org/) sobre los mapas de [OpenStreetMap](https://www.openstreetmap.org/), redondeados al kilómetro y al minuto. La red es una simplificación: solo incluye las vías principales entre estos municipios.
 
 ## Complejidad
 
@@ -52,5 +52,6 @@ java -cp out PruebasRutas       (pruebas)
 En la ventana:
 - Los municipios se arrastran con el ratón.
 - Con dos clics sobre municipios se elige el origen y el destino.
-- La ruta más corta se marca en verde y la de menos paradas en naranja punteado.
+- En «Buscar» se elige la ruta más corta (km) o la más rápida (tiempo).
+- La ruta de Dijkstra se marca en verde y la de menos paradas en naranja punteado.
 - Las vías cerradas se ven en rojo punteado.

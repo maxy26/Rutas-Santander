@@ -26,12 +26,13 @@ public class VentanaRutas extends JFrame {
 
     private Grafo g;
     private final Map<String, Point> pos = new HashMap<>();   // posición de cada municipio por nombre
-    private final List<int[]> cerrados = new ArrayList<>();   // vías cerradas: {a, b, km}
+    private final List<int[]> cerrados = new ArrayList<>();   // vías cerradas: {a, b, km, minutos}
     private int[] rutaRapida = new int[0];
     private int[] rutaParadas = new int[0];
 
     private final JComboBox<String> cbOrigen = new JComboBox<>();
     private final JComboBox<String> cbDestino = new JComboBox<>();
+    private final JComboBox<String> cbCriterio = new JComboBox<>(new String[]{"Más corta (km)", "Más rápida (tiempo)"});
     private final JTextArea txt = new JTextArea();
     private final Mapa mapa = new Mapa();
     private String colocando = null;                     // municipio nuevo esperando un clic en el mapa
@@ -46,6 +47,9 @@ public class VentanaRutas extends JFrame {
         arriba.add(cbOrigen);
         arriba.add(new JLabel("Destino:"));
         arriba.add(cbDestino);
+        arriba.add(new JLabel("Buscar:"));
+        arriba.add(cbCriterio);
+        cbCriterio.addActionListener(e -> { if (rutaRapida.length > 0) calcular(); else mapa.repaint(); });
         arriba.add(boton("Calcular ruta", e -> calcular()));
         arriba.add(boton("Comparar con fuerza bruta", e -> comparar()));
         arriba.add(boton("Ver matriz", e -> verMatriz()));
@@ -76,7 +80,8 @@ public class VentanaRutas extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         info("Elija origen y destino arriba, o haga clic en dos municipios del mapa.\n\n"
                 + "Puede arrastrar los municipios para acomodar el dibujo.\n\n"
-                + "Verde: ruta más corta (Dijkstra).\nNaranja punteada: ruta con menos paradas.\nRojo punteado: vía cerrada.");
+                + "En 'Buscar' elija la ruta más corta (km) o la más rápida (tiempo). Los números del mapa cambian según lo elegido.\n\n"
+                + "Verde: ruta encontrada por Dijkstra.\nNaranja punteada: ruta con menos paradas.\nRojo punteado: vía cerrada.");
     }
 
     // ================================================================ datos
@@ -125,7 +130,8 @@ public class VentanaRutas extends JFrame {
         int o = cbOrigen.getSelectedIndex(), d = cbDestino.getSelectedIndex();
         if (o == d) { limpiarRuta(); info("El origen y el destino son el mismo municipio: 0 km."); return; }
 
-        Rutas.Resultado rapida = Rutas.dijkstra(g, o, d);
+        boolean t = porTiempo();
+        Rutas.Resultado rapida = Rutas.dijkstra(g, o, d, t);
         Rutas.Resultado paradas = Rutas.menosParadas(g, o, d);
         rutaRapida = rapida.camino;
         rutaParadas = paradas.camino;
@@ -137,23 +143,32 @@ public class VentanaRutas extends JFrame {
             return;
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("RUTA MÁS CORTA (Dijkstra)\n");
+        sb.append(t ? "RUTA MÁS RÁPIDA (Dijkstra por tiempo)\n" : "RUTA MÁS CORTA (Dijkstra por km)\n");
         describir(sb, rapida.camino);
-        sb.append("Total: ").append(rapida.km).append(" km, ").append(rapida.camino.length - 1).append(" vías\n\n");
+        total(sb, rapida);
         sb.append("MENOS PARADAS (anchura)\n");
         describir(sb, paradas.camino);
-        sb.append("Total: ").append(paradas.km).append(" km, ").append(paradas.camino.length - 1).append(" vías\n\n");
-        if (paradas.km > rapida.km)
-            sb.append("Menos paradas NO es lo más corto:\nDijkstra ahorra ").append(paradas.km - rapida.km).append(" km.");
+        total(sb, paradas);
+        int dif = t ? paradas.minutos - rapida.minutos : paradas.km - rapida.km;
+        if (dif > 0)
+            sb.append("Menos paradas NO es lo mejor:\nDijkstra ahorra ").append(t ? Rutas.tiempo(dif) : dif + " km").append(".");
         else
-            sb.append("En este caso ambas rutas miden lo mismo.");
+            sb.append("En este caso las dos rutas son igual de buenas.");
         info(sb.toString());
+    }
+
+    private boolean porTiempo() { return cbCriterio.getSelectedIndex() == 1; }
+
+    private void total(StringBuilder sb, Rutas.Resultado r) {
+        sb.append("Total: ").append(r.km).append(" km, ").append(Rutas.tiempo(r.minutos))
+          .append(", ").append(r.camino.length - 1).append(" vías\n\n");
     }
 
     private void describir(StringBuilder sb, int[] c) {
         for (int i = 0; i < c.length; i++) {
             if (i == 0) sb.append("  ").append(g.nombre(c[i])).append('\n');
-            else sb.append("  -> ").append(g.nombre(c[i])).append(" (+").append(g.peso(c[i - 1], c[i])).append(")\n");
+            else sb.append("  -> ").append(g.nombre(c[i])).append(" (+").append(g.peso(c[i - 1], c[i])).append(" km, ")
+                    .append(Rutas.tiempo(g.minutos(c[i - 1], c[i]))).append(")\n");
         }
     }
 
@@ -192,7 +207,7 @@ public class VentanaRutas extends JFrame {
         m.setColumnIdentifiers(cols);
         for (int i = 0; i < n; i++) {
             m.setValueAt(i + " " + g.nombre(i), i, 0);
-            for (int j = 0; j < n; j++) m.setValueAt(g.peso(i, j) == 0 ? "" : g.peso(i, j), i, j + 1);
+            for (int j = 0; j < n; j++) m.setValueAt(g.peso(i, j) == 0 ? "" : (porTiempo() ? g.minutos(i, j) : g.peso(i, j)), i, j + 1);
         }
         JTable t = new JTable(m);
         t.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -200,17 +215,18 @@ public class VentanaRutas extends JFrame {
         for (int j = 1; j <= n; j++) t.getColumnModel().getColumn(j).setPreferredWidth(28);
         JScrollPane sp = new JScrollPane(t);
         sp.setPreferredSize(new Dimension(900, 450));
-        JOptionPane.showMessageDialog(this, sp, "Matriz de adyacencia (km; vacío = no hay vía)", JOptionPane.PLAIN_MESSAGE);
+        String que = porTiempo() ? "minutos" : "km";
+        JOptionPane.showMessageDialog(this, sp, "Matriz de adyacencia (" + que + "; vacío = no hay vía)", JOptionPane.PLAIN_MESSAGE);
     }
 
     private void cerrarVia() {
         int[] ab = pedirDosMunicipios("Cerrar vía");
         if (ab == null) return;
-        int w = g.peso(ab[0], ab[1]);
+        int km = g.peso(ab[0], ab[1]), min = g.minutos(ab[0], ab[1]);
         if (!g.eliminarVia(ab[0], ab[1])) { info("Esos municipios no tienen una vía directa."); return; }
-        cerrados.add(new int[]{ab[0], ab[1], w});
+        cerrados.add(new int[]{ab[0], ab[1], km, min});
         limpiarRuta();
-        info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " cerrado.\nVuelva a calcular la ruta para ver el desvío.");
+        info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " cerrada.\nVuelva a calcular la ruta para ver el desvío.");
     }
 
     private void reabrirVia() {
@@ -220,9 +236,9 @@ public class VentanaRutas extends JFrame {
         Object sel = JOptionPane.showInputDialog(this, "Vía a reabrir:", "Reabrir", JOptionPane.PLAIN_MESSAGE, null, op, op[0]);
         if (sel == null) return;
         int[] t = cerrados.remove(java.util.Arrays.asList(op).indexOf(sel));
-        g.agregarVia(t[0], t[1], t[2]);
+        g.agregarVia(t[0], t[1], t[2], t[3]);
         limpiarRuta();
-        info("Vía " + sel + " reabierto (" + t[2] + " km).");
+        info("Vía " + sel + " reabierta (" + t[2] + " km, " + Rutas.tiempo(t[3]) + ").");
     }
 
     private void agregarVia() {
@@ -230,12 +246,15 @@ public class VentanaRutas extends JFrame {
         if (ab == null) return;
         String s = JOptionPane.showInputDialog(this, "Kilómetros de la vía:");
         if (s == null) return;
+        String m = JOptionPane.showInputDialog(this, "Minutos que se tarda en carro:");
+        if (m == null) return;
         try {
-            g.agregarVia(ab[0], ab[1], Integer.parseInt(s.trim()));
+            int km = Integer.parseInt(s.trim()), min = Integer.parseInt(m.trim());
+            g.agregarVia(ab[0], ab[1], km, min);
             limpiarRuta();
-            info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " = " + s.trim() + " km.");
+            info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " = " + km + " km, " + Rutas.tiempo(min) + ".");
         } catch (NumberFormatException e) {
-            error("Escriba un número entero de km.");
+            error("Escriba números enteros de km y de minutos.");
         } catch (RuntimeException e) {
             error(e.getMessage());
         }
@@ -375,7 +394,7 @@ public class VentanaRutas extends JFrame {
             g2.setColor(new Color(0xE53935));
             for (int[] t : cerrados) linea(g2, t[0], t[1]);
 
-            // vías normales y sus km
+            // vías normales (las etiquetas se escriben al final)
             for (int i = 0; i < n; i++)
                 for (int j = i + 1; j < n; j++) {
                     if (g.peso(i, j) == 0) continue;
@@ -388,15 +407,6 @@ public class VentanaRutas extends JFrame {
                         g2.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{8, 7}, 0));
                         linea(g2, i, j);
                     }
-                    Point a = pos.get(g.nombre(i)), b = pos.get(g.nombre(j));
-                    String w = String.valueOf(g.peso(i, j));
-                    int mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-                    g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
-                    int tw = g2.getFontMetrics().stringWidth(w);
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(mx - tw / 2 - 3, my - 8, tw + 6, 15, 6, 6);
-                    g2.setColor(new Color(0x37474F));
-                    g2.drawString(w, mx - tw / 2, my + 4);
                 }
 
             // municipios
@@ -416,6 +426,8 @@ public class VentanaRutas extends JFrame {
                 g2.drawString(g.nombre(i), p.x + R + 4, p.y - R + 2);
             }
 
+            dibujarEtiquetas(g2);
+
             // leyenda de provincias
             g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
             String[] tr = {"Soto", "Soto Norte", "Mares", "Guanentá", "Comunera"};
@@ -427,6 +439,46 @@ public class VentanaRutas extends JFrame {
                 g2.drawString("Provincia " + t, 30, y);
                 y += 18;
             }
+        }
+
+        /**
+         * Escribe los km (o el tiempo) de cada vía. Prueba varios puntos a lo largo de la línea
+         * y usa el primero que no tape un municipio, un nombre u otra etiqueta.
+         */
+        private void dibujarEtiquetas(Graphics2D g2) {
+            int n = g.tamano();
+            Font fNombre = new Font(Font.SANS_SERIF, Font.BOLD, 12), fEtiqueta = new Font(Font.SANS_SERIF, Font.BOLD, 11);
+            FontMetrics fmN = g2.getFontMetrics(fNombre), fmE = g2.getFontMetrics(fEtiqueta);
+            List<Rectangle> ocupado = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                Point p = pos.get(g.nombre(i));
+                ocupado.add(new Rectangle(p.x - R, p.y - R, 2 * R, 2 * R));
+                ocupado.add(new Rectangle(p.x + R + 4, p.y - R - 10, fmN.stringWidth(g.nombre(i)), 14));
+            }
+            double[] lugares = {0.5, 0.4, 0.6, 0.3, 0.7, 0.22, 0.78};
+            g2.setFont(fEtiqueta);
+            for (int i = 0; i < n; i++)
+                for (int j = i + 1; j < n; j++) {
+                    if (g.peso(i, j) == 0) continue;
+                    String w = porTiempo() ? Rutas.tiempo(g.minutos(i, j)) : g.peso(i, j) + " km";
+                    Point a = pos.get(g.nombre(i)), b = pos.get(g.nombre(j));
+                    int tw = fmE.stringWidth(w) + 6, th = 15;
+                    Rectangle elegido = null, centro = null;
+                    for (double t : lugares) {
+                        int cx = (int) (a.x + t * (b.x - a.x)), cy = (int) (a.y + t * (b.y - a.y));
+                        Rectangle r = new Rectangle(cx - tw / 2, cy - th / 2, tw, th);
+                        if (centro == null) centro = r;
+                        boolean libre = true;
+                        for (Rectangle o : ocupado) if (o.intersects(r)) { libre = false; break; }
+                        if (libre) { elegido = r; break; }
+                    }
+                    if (elegido == null) elegido = centro;   // si ningún punto está libre, se usa el del centro
+                    ocupado.add(elegido);
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(elegido.x, elegido.y, elegido.width, elegido.height, 6, 6);
+                    g2.setColor(new Color(0x37474F));
+                    g2.drawString(w, elegido.x + 3, elegido.y + 11);
+                }
         }
 
         private void linea(Graphics2D g2, int i, int j) {

@@ -18,6 +18,12 @@ public class PruebasRutas {
         verificar("Hay ruta Bucaramanga -> San Gil (" + r.km + " km)", r.existe());
         verificar("Dijkstra coincide con fuerza bruta", r.km == Rutas.fuerzaBruta(g, bga, sanGil, Long.MAX_VALUE).km);
         verificar("Los km del camino suman el total", Rutas.sumarKm(g, r.camino) == r.km);
+        int soc = g.buscar("Socorro"), cha = g.buscar("Charalá");
+        Rutas.Resultado corta = Rutas.dijkstra(g, soc, cha, false), rapida = Rutas.dijkstra(g, soc, cha, true);
+        verificar("Socorro -> Charalá: lo más corto va por Oiba (" + corta.km + " km)", corta.camino[1] == g.buscar("Oiba"));
+        verificar("Socorro -> Charalá: lo más rápido va por San Gil (" + Rutas.tiempo(rapida.minutos) + " < " + Rutas.tiempo(corta.minutos) + ")",
+                rapida.camino[1] == g.buscar("San Gil") && rapida.minutos < corta.minutos);
+        verificar("Minutos negativos se rechazan", lanza(() -> g.agregarVia(0, 1, 10, -3)));
         Rutas.Resultado rp = Rutas.dijkstra(g, piede, giron);
         Rutas.Resultado bp = Rutas.menosParadas(g, piede, giron);
         verificar("Piedecuesta -> Girón: menos paradas pasa por Bucaramanga", bp.camino.length == 3 && bp.camino[1] == bga);
@@ -51,8 +57,8 @@ public class PruebasRutas {
         System.out.println("--- Casos de error ---");
         verificar("Municipio repetido se rechaza (sin importar mayúsculas)", lanza(() -> g.agregarMunicipio("bucaramanga", "x")));
         verificar("Nombre vacío se rechaza", lanza(() -> g.agregarMunicipio("  ", "x")));
-        verificar("Kilómetros negativos se rechazan", lanza(() -> g.agregarVia(0, 1, -5)));
-        verificar("Vía de un municipio consigo mismo se rechaza", lanza(() -> g.agregarVia(2, 2, 3)));
+        verificar("Kilómetros negativos se rechazan", lanza(() -> g.agregarVia(0, 1, -5, 10)));
+        verificar("Vía de un municipio consigo mismo se rechaza", lanza(() -> g.agregarVia(2, 2, 3, 3)));
         verificar("Municipio inexistente se rechaza", lanza(() -> g.grado(99)));
         verificar("Buscar un nombre que no existe devuelve -1", g.buscar("Municipio Marte") == -1);
 

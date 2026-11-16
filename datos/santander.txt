@@ -1,7 +1,7 @@
 # Red vial simplificada de Santander (Colombia).
-# Distancias por carretera en km, calculadas con OSRM (Open Source Routing Machine)
+# Distancias (km) y tiempos en carro (minutos, sin trancones) calculados con OSRM (Open Source Routing Machine)
 # sobre los mapas de OpenStreetMap (consulta del 16-nov-2026), redondeadas al km.
-# Formato:  M;Municipio;Provincia      V;Municipio A;Municipio B;km
+# Formato:  M;Municipio;Provincia      V;Municipio A;Municipio B;km;minutos
 #
 # ---------------- Municipios ----------------
 M;Bucaramanga;Soto
@@ -26,31 +26,31 @@ M;Charalá;Guanentá
 M;Oiba;Comunera
 M;Puerto Wilches;Mares
 #
-# ---------------- Vías (km) ----------------
-V;Bucaramanga;Floridablanca;9
-V;Bucaramanga;Girón;12
-V;Bucaramanga;Piedecuesta;19
-V;Bucaramanga;Rionegro;24
-V;Bucaramanga;Matanza;39
-V;Floridablanca;Piedecuesta;10
-V;Floridablanca;Girón;11
-V;Girón;Lebrija;11
-V;Girón;Zapatoca;56
-V;Lebrija;Barrancabermeja;94
-V;Rionegro;Sabana de Torres;68
-V;Sabana de Torres;Puerto Wilches;68
-V;Barrancabermeja;Puerto Wilches;48
-V;Barrancabermeja;San Vicente de Chucurí;74
-V;San Vicente de Chucurí;Zapatoca;46
-V;Piedecuesta;Los Santos;40
-V;Piedecuesta;Aratoca;53
-V;Aratoca;San Gil;29
-V;Aratoca;Curití;19
-V;Curití;San Gil;13
-V;Curití;Mogotes;28
-V;San Gil;Mogotes;35
-V;San Gil;Barichara;22
-V;San Gil;Socorro;22
-V;San Gil;Charalá;37
-V;Socorro;Oiba;29
-V;Charalá;Oiba;25
+# ---------------- Vías (km y minutos) ----------------
+V;Bucaramanga;Floridablanca;9;9
+V;Bucaramanga;Girón;12;12
+V;Bucaramanga;Piedecuesta;19;15
+V;Bucaramanga;Rionegro;24;28
+V;Bucaramanga;Matanza;39;58
+V;Floridablanca;Piedecuesta;10;10
+V;Floridablanca;Girón;11;11
+V;Girón;Lebrija;11;10
+V;Girón;Zapatoca;56;63
+V;Lebrija;Barrancabermeja;94;76
+V;Rionegro;Sabana de Torres;68;106
+V;Sabana de Torres;Puerto Wilches;68;109
+V;Barrancabermeja;Puerto Wilches;48;53
+V;Barrancabermeja;San Vicente de Chucurí;74;104
+V;San Vicente de Chucurí;Zapatoca;46;57
+V;Piedecuesta;Los Santos;40;55
+V;Piedecuesta;Aratoca;53;41
+V;Aratoca;San Gil;29;22
+V;Aratoca;Curití;19;17
+V;Curití;San Gil;13;13
+V;Curití;Mogotes;28;57
+V;San Gil;Mogotes;35;52
+V;San Gil;Barichara;22;38
+V;San Gil;Socorro;22;22
+V;San Gil;Charalá;37;57
+V;Socorro;Oiba;29;29
+V;Charalá;Oiba;25;59
