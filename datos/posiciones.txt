@@ -1,9 +1,9 @@
 # Posición de cada municipio en el mapa (x;y en píxeles), calculada a partir de su latitud y longitud.
 # El norte está arriba. Los municipios se pueden mover con el ratón dentro del programa.
-Bucaramanga;640;185
-Floridablanca;672;268
-Girón;590;255
-Piedecuesta;735;305
+Bucaramanga;630;180
+Floridablanca;665;285
+Girón;570;260
+Piedecuesta;740;335
 Lebrija;510;205
 Rionegro;612;123
 Matanza;711;88

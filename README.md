@@ -7,7 +7,7 @@ Calcula la ruta más corta (km) o la más rápida (tiempo en carro) por carreter
 ## Qué hace
 
 - Dibuja el mapa de 21 municipios y 27 vías, con los km o el tiempo de cada vía.
-- Calcula con Dijkstra la ruta más corta o la más rápida, y la compara con la ruta de menos paradas (recorrido en anchura con una cola). No siempre coinciden: de Socorro a Charalá lo más corto es ir por Oiba (54 km) y lo más rápido por San Gil (1 h 19 min).
+- Calcula con Dijkstra la ruta más corta o la más rápida, y la compara con la ruta de menos paradas (recorrido en anchura con una cola). No siempre coinciden: de Lebrija a San Vicente de Chucurí lo más corto es ir por Zapatoca (142 km, 5 h 08 min) y lo más rápido por Barrancabermeja (152,9 km, 4 h 01 min).
 - Agrega municipios y vías, cierra vías (por ejemplo, por un derrumbe) y elimina municipios.
 - Mide Dijkstra contra la fuerza bruta, que prueba todos los caminos, en grafos cada vez más grandes.
 
@@ -21,9 +21,10 @@ Calcula la ruta más corta (km) o la más rápida (tiempo en carro) por carreter
 | `src/RutasSantander.java` | Versión de consola |
 | `src/PruebasRutas.java` | Casos normales, límite y de error |
 | `datos/santander.txt` | Municipios, provincias, kilómetros y minutos de cada vía |
+| `Rutas_Santander_Google_Maps.xlsx` | Datos originales consultados en Google Maps (carro, bus y a pie) |
 | `datos/posiciones.txt` | Posición de cada municipio en el mapa |
 
-Las distancias (km) y los tiempos en carro sin trancones (minutos) se calcularon con [OSRM](https://project-osrm.org/) sobre los mapas de [OpenStreetMap](https://www.openstreetmap.org/), redondeados al kilómetro y al minuto. La red es una simplificación: solo incluye las vías principales entre estos municipios.
+Las distancias (km) y los tiempos en carro (minutos) son los de la ruta recomendada por **Google Maps**, consultada el 16 de noviembre de 2026. El tiempo incluye el tráfico del momento de la consulta. La red es una simplificación: solo incluye las vías principales entre estos municipios. La posición de cada municipio en el mapa se calculó con su latitud y longitud.
 
 ## Complejidad
 

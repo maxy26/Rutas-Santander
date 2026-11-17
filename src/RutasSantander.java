@@ -78,18 +78,18 @@ public class RutasSantander {
         }
         System.out.println("\nRuta más corta (Dijkstra):");
         imprimirCamino(rapida.camino);
-        System.out.println("Total: " + rapida.km + " km, " + Rutas.tiempo(rapida.minutos) + ", " + (rapida.camino.length - 1) + " vías.");
+        System.out.println("Total: " + Rutas.km(rapida.km) + ", " + Rutas.tiempo(rapida.minutos) + ", " + (rapida.camino.length - 1) + " vías.");
         Rutas.Resultado veloz = Rutas.dijkstra(g, o, d, true);
         System.out.println("\nRuta más rápida (Dijkstra por tiempo):");
         imprimirCamino(veloz.camino);
-        System.out.println("Total: " + veloz.km + " km, " + Rutas.tiempo(veloz.minutos) + ", " + (veloz.camino.length - 1) + " vías.");
+        System.out.println("Total: " + Rutas.km(veloz.km) + ", " + Rutas.tiempo(veloz.minutos) + ", " + (veloz.camino.length - 1) + " vías.");
 
         Rutas.Resultado corta = Rutas.menosParadas(g, o, d);
         System.out.println("\nRuta con menos paradas (recorrido en anchura):");
         imprimirCamino(corta.camino);
-        System.out.println("Total: " + corta.km + " km, " + Rutas.tiempo(corta.minutos) + ", " + (corta.camino.length - 1) + " vías.");
+        System.out.println("Total: " + Rutas.km(corta.km) + ", " + Rutas.tiempo(corta.minutos) + ", " + (corta.camino.length - 1) + " vías.");
         if (corta.km > rapida.km)
-            System.out.println("-> Menos paradas NO es lo más corto: Dijkstra ahorra " + (corta.km - rapida.km) + " km.");
+            System.out.println("-> Menos paradas NO es lo más corto: Dijkstra ahorra " + Rutas.km(corta.km - rapida.km) + ".");
         else
             System.out.println("-> En este caso ambas rutas miden lo mismo.");
     }
@@ -97,7 +97,7 @@ public class RutasSantander {
     private static void imprimirCamino(int[] c) {
         for (int i = 0; i < c.length; i++) {
             if (i == 0) System.out.println("  " + g.nombre(c[i]));
-            else System.out.println("  -> " + g.nombre(c[i]) + "  (+" + g.peso(c[i - 1], c[i]) + " km, " + Rutas.tiempo(g.minutos(c[i - 1], c[i])) + ")");
+            else System.out.println("  -> " + g.nombre(c[i]) + "  (+" + Rutas.km(g.peso(c[i - 1], c[i])) + ", " + Rutas.tiempo(g.minutos(c[i - 1], c[i])) + ")");
         }
     }
 
@@ -122,7 +122,7 @@ public class RutasSantander {
             double msF = (System.nanoTime() - t1) / 1e6;
 
             String opsF = rf.operaciones < 0 ? "> " + LIMITE : String.valueOf(rf.operaciones);
-            String igual = rf.operaciones < 0 ? "(cortada)" : (rf.km == rd.km ? "sí" : "NO");
+            String igual = rf.operaciones < 0 ? "(cortada)" : (Math.abs(rf.km - rd.km) < 1e-9 ? "sí" : "NO");
             System.out.printf("%-8s %-10d %-14d %-12.3f %-16s %-12.1f %s%n",
                     k + "x" + k, k * k, rd.operaciones, msD, opsF, msF, igual);
         }
@@ -156,7 +156,7 @@ public class RutasSantander {
         int a = leerMunicipio("Municipio A: ");
         int b = leerMunicipio("Municipio B: ");
         if (a == b) throw new IllegalArgumentException("Una vía no puede unir un municipio consigo mismo.");
-        int m = leerEntero("Kilómetros de la vía: ");
+        int m = leerEntero("Kilómetros de la vía (entero): ");
         int t = leerEntero("Minutos que se tarda: ");
         g.agregarVia(a, b, m, t);
         System.out.println("Vía " + g.nombre(a) + " - " + g.nombre(b) + " = " + m + " km, " + Rutas.tiempo(t) + ".");

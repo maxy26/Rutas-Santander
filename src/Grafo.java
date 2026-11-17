@@ -16,8 +16,8 @@ public class Grafo {
 
     private final String[] nombres = new String[MAX];
     private final String[] provincias = new String[MAX];
-    private final int[][] ady = new int[MAX][MAX];      // km
-    private final int[][] tiempo = new int[MAX][MAX];   // minutos
+    private final double[][] ady = new double[MAX][MAX];      // km (con decimales)
+    private final double[][] tiempo = new double[MAX][MAX];   // minutos
     private int n = 0;                          // municipios registrados
 
     // ------------------------------------------------------------ consultas básicas
@@ -27,8 +27,8 @@ public class Grafo {
     public boolean estaLleno() { return n == MAX; }
     public String nombre(int i) { return nombres[i]; }
     public String provincia(int i) { return provincias[i]; }
-    public int peso(int i, int j) { return ady[i][j]; }
-    public int minutos(int i, int j) { return tiempo[i][j]; }
+    public double peso(int i, int j) { return ady[i][j]; }
+    public int minutos(int i, int j) { return (int) tiempo[i][j]; }
 
     /** Búsqueda secuencial por nombre, sin importar mayúsculas. O(n). Devuelve -1 si no existe. */
     public int buscar(String nombre) {
@@ -52,7 +52,7 @@ public class Grafo {
     }
 
     /** Agrega o actualiza la vía entre dos municipios, con su distancia y su tiempo. O(1). */
-    public void agregarVia(int a, int b, int km, int min) {
+    public void agregarVia(int a, int b, double km, int min) {
         validar(a);
         validar(b);
         if (a == b) throw new IllegalArgumentException("Una vía no puede unir un municipio consigo mismo.");
@@ -88,7 +88,7 @@ public class Grafo {
             nombres[i] = nombres[i + 1];
             provincias[i] = provincias[i + 1];
         }
-        for (int[][] m : new int[][][]{ady, tiempo}) {   // se hace igual en las dos matrices
+        for (double[][] m : new double[][][]{ady, tiempo}) {   // se hace igual en las dos matrices
             for (int i = k; i < n - 1; i++)            // filas
                 for (int j = 0; j < n; j++) m[i][j] = m[i + 1][j];
             for (int j = k; j < n - 1; j++)            // columnas
@@ -127,11 +127,11 @@ public class Grafo {
         sb.append('\n');
         for (int i = 0; i < n; i++) {
             sb.append(String.format("%3d |", i));
-            for (int j = 0; j < n; j++) sb.append(ady[i][j] == 0 ? "  ." : String.format("%3d", ady[i][j]));
+            for (int j = 0; j < n; j++) sb.append(ady[i][j] == 0 ? "  ." : String.format("%3.0f", ady[i][j]));
             sb.append('\n');
         }
         System.out.print(sb);
-        System.out.println("(los números son km; '.' = no hay vía)");
+        System.out.println("(los números son km redondeados; '.' = no hay vía)");
     }
 
     private void validar(int i) {
@@ -161,7 +161,7 @@ public class Grafo {
                     } else if (p[0].equals("V")) {
                         int a = g.buscar(p[1]), b = g.buscar(p[2]);
                         if (a == -1 || b == -1) throw new IllegalArgumentException("municipio no declarado");
-                        g.agregarVia(a, b, Integer.parseInt(p[3].trim()), Integer.parseInt(p[4].trim()));
+                        g.agregarVia(a, b, Double.parseDouble(p[3].trim()), Integer.parseInt(p[4].trim()));
                     }
                 } catch (RuntimeException e) {
                     throw new IOException("Error en la línea " + num + " del archivo: " + e.getMessage());

@@ -15,19 +15,23 @@ public class PruebasRutas {
         verificar("Se cargan 21 municipios y 27 vías", g.tamano() == 21 && g.totalVias() == 27);
         verificar("La matriz es simétrica", simetrica(g));
         Rutas.Resultado r = Rutas.dijkstra(g, bga, sanGil);
-        verificar("Hay ruta Bucaramanga -> San Gil (" + r.km + " km)", r.existe());
-        verificar("Dijkstra coincide con fuerza bruta", r.km == Rutas.fuerzaBruta(g, bga, sanGil, Long.MAX_VALUE).km);
+        verificar("Hay ruta Bucaramanga -> San Gil (" + Rutas.km(r.km) + ")", r.existe());
+        verificar("Dijkstra coincide con fuerza bruta", Math.abs(r.km - Rutas.fuerzaBruta(g, bga, sanGil, Long.MAX_VALUE).km) < 1e-9);
         verificar("Los km del camino suman el total", Rutas.sumarKm(g, r.camino) == r.km);
-        int soc = g.buscar("Socorro"), cha = g.buscar("Charalá");
-        Rutas.Resultado corta = Rutas.dijkstra(g, soc, cha, false), rapida = Rutas.dijkstra(g, soc, cha, true);
-        verificar("Socorro -> Charalá: lo más corto va por Oiba (" + corta.km + " km)", corta.camino[1] == g.buscar("Oiba"));
-        verificar("Socorro -> Charalá: lo más rápido va por San Gil (" + Rutas.tiempo(rapida.minutos) + " < " + Rutas.tiempo(corta.minutos) + ")",
-                rapida.camino[1] == g.buscar("San Gil") && rapida.minutos < corta.minutos);
+        int leb = g.buscar("Lebrija"), sanVi = g.buscar("San Vicente de Chucurí");
+        Rutas.Resultado corta = Rutas.dijkstra(g, leb, sanVi, false), rapida = Rutas.dijkstra(g, leb, sanVi, true);
+        verificar("Lebrija -> San Vicente: lo más corto va por Girón y Zapatoca (" + Rutas.km(corta.km) + ")",
+                corta.camino[1] == giron && corta.km < rapida.km);
+        verificar("Lebrija -> San Vicente: lo más rápido va por Barrancabermeja (" + Rutas.tiempo(rapida.minutos) + " < " + Rutas.tiempo(corta.minutos) + ")",
+                rapida.camino[1] == g.buscar("Barrancabermeja") && rapida.minutos < corta.minutos);
+        int rio = g.buscar("Rionegro");
+        Rutas.Resultado dr = Rutas.dijkstra(g, rio, g.buscar("Barrancabermeja")), br = Rutas.menosParadas(g, rio, g.buscar("Barrancabermeja"));
+        verificar("Rionegro -> Barrancabermeja: Dijkstra ahorra " + Rutas.km(br.km - dr.km) + " frente a menos paradas", dr.km < br.km);
         verificar("Minutos negativos se rechazan", lanza(() -> g.agregarVia(0, 1, 10, -3)));
         Rutas.Resultado rp = Rutas.dijkstra(g, piede, giron);
         Rutas.Resultado bp = Rutas.menosParadas(g, piede, giron);
         verificar("Piedecuesta -> Girón: menos paradas pasa por Bucaramanga", bp.camino.length == 3 && bp.camino[1] == bga);
-        verificar("Piedecuesta -> Girón: Dijkstra va por Floridablanca (" + rp.km + " < " + bp.km + " km)",
+        verificar("Piedecuesta -> Girón: Dijkstra va por Floridablanca (" + Rutas.km(rp.km) + " < " + Rutas.km(bp.km) + ")",
                 rp.km < bp.km && rp.camino[1] == g.buscar("Floridablanca"));
 
         System.out.println("--- Casos límite ---");
@@ -42,7 +46,7 @@ public class PruebasRutas {
         int cB = copia.buscar("Bucaramanga"), cG = copia.buscar("Girón"), cBarr = copia.buscar("Barrancabermeja");
         copia.eliminarVia(cG, copia.buscar("Lebrija"));
         Rutas.Resultado desvio = Rutas.dijkstra(copia, cB, cBarr);
-        verificar("Con Girón-Lebrija cerrada, Dijkstra desvía por Zapatoca (" + desvio.km + " km)", desvio.existe()
+        verificar("Con Girón-Lebrija cerrada, Dijkstra desvía por Zapatoca (" + Rutas.km(desvio.km) + ")", desvio.existe()
                 && contiene(desvio.camino, copia.buscar("Zapatoca")));
         copia.eliminarVia(cG, copia.buscar("Zapatoca"));
         copia.eliminarVia(cB, copia.buscar("Rionegro"));

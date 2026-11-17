@@ -1,6 +1,6 @@
 # Red vial simplificada de Santander (Colombia).
-# Distancias (km) y tiempos en carro (minutos, sin trancones) calculados con OSRM (Open Source Routing Machine)
-# sobre los mapas de OpenStreetMap (consulta del 16-nov-2026), redondeadas al km.
+# Fuente: Google Maps, ruta en carro recomendada, consultada el 16 de noviembre de 2026
+# (archivo Rutas_Santander_Google_Maps.xlsx). El tiempo incluye el tráfico del momento de la consulta.
 # Formato:  M;Municipio;Provincia      V;Municipio A;Municipio B;km;minutos
 #
 # ---------------- Municipios ----------------
@@ -26,31 +26,37 @@ M;Charalá;Guanentá
 M;Oiba;Comunera
 M;Puerto Wilches;Mares
 #
-# ---------------- Vías (km y minutos) ----------------
-V;Bucaramanga;Floridablanca;9;9
-V;Bucaramanga;Girón;12;12
-V;Bucaramanga;Piedecuesta;19;15
-V;Bucaramanga;Rionegro;24;28
-V;Bucaramanga;Matanza;39;58
-V;Floridablanca;Piedecuesta;10;10
-V;Floridablanca;Girón;11;11
-V;Girón;Lebrija;11;10
-V;Girón;Zapatoca;56;63
-V;Lebrija;Barrancabermeja;94;76
-V;Rionegro;Sabana de Torres;68;106
-V;Sabana de Torres;Puerto Wilches;68;109
-V;Barrancabermeja;Puerto Wilches;48;53
-V;Barrancabermeja;San Vicente de Chucurí;74;104
-V;San Vicente de Chucurí;Zapatoca;46;57
-V;Piedecuesta;Los Santos;40;55
-V;Piedecuesta;Aratoca;53;41
-V;Aratoca;San Gil;29;22
-V;Aratoca;Curití;19;17
-V;Curití;San Gil;13;13
-V;Curití;Mogotes;28;57
-V;San Gil;Mogotes;35;52
-V;San Gil;Barichara;22;38
-V;San Gil;Socorro;22;22
-V;San Gil;Charalá;37;57
-V;Socorro;Oiba;29;29
-V;Charalá;Oiba;25;59
+# ---------------- Vías (km y minutos en carro) ----------------
+V;Bucaramanga;Floridablanca;6.6;14
+V;Bucaramanga;Girón;10.3;17
+# Observación: Pasa por Floridablanca
+V;Bucaramanga;Piedecuesta;18.3;28
+V;Bucaramanga;Rionegro;23.3;49
+V;Bucaramanga;Matanza;38.6;90
+V;Floridablanca;Piedecuesta;12.5;18
+V;Floridablanca;Girón;10.3;17
+# Observación: Google da 36,8 km frente a 11 km de OSM: revisar
+V;Girón;Lebrija;36.8;61
+V;Girón;Zapatoca;58.1;113
+# Observación: Más corta que OSM (94 km)
+V;Lebrija;Barrancabermeja;79.8;103
+# Observación: Google da 95 km frente a 68 km de OSM: revisar
+V;Rionegro;Sabana de Torres;95.0;175
+V;Sabana de Torres;Puerto Wilches;67.7;95
+V;Barrancabermeja;Puerto Wilches;48.3;88
+V;Barrancabermeja;San Vicente de Chucurí;73.1;138
+V;San Vicente de Chucurí;Zapatoca;47.1;134
+V;Piedecuesta;Los Santos;41.6;82
+V;Piedecuesta;Aratoca;53.9;100
+V;Aratoca;San Gil;28.8;53
+V;Aratoca;Curití;21.7;43
+V;Curití;San Gil;12.0;28
+# Observación: Google da 41,7 km frente a 28 km de OSM; la vía indicada es la de San Gil: revisar
+V;Curití;Mogotes;41.7;78
+V;San Gil;Mogotes;34.9;69
+V;San Gil;Barichara;22.4;41
+V;San Gil;Socorro;21.7;34
+V;San Gil;Charalá;37.3;59
+V;Socorro;Oiba;29.5;43
+# Observación: Google da 37,7 km frente a 25 km de OSM: revisar
+V;Charalá;Oiba;37.7;80

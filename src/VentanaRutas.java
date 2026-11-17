@@ -26,7 +26,7 @@ public class VentanaRutas extends JFrame {
 
     private Grafo g;
     private final Map<String, Point> pos = new HashMap<>();   // posición de cada municipio por nombre
-    private final List<int[]> cerrados = new ArrayList<>();   // vías cerradas: {a, b, km, minutos}
+    private final List<double[]> cerrados = new ArrayList<>();   // vías cerradas: {a, b, km, minutos}
     private int[] rutaRapida = new int[0];
     private int[] rutaParadas = new int[0];
 
@@ -68,14 +68,14 @@ public class VentanaRutas extends JFrame {
         botones.add(boton("Restaurar datos originales", e -> { cargarDatos(); limpiarRuta(); info("Datos originales cargados."); }));
         JPanel derecha = new JPanel(new BorderLayout(4, 6));
         derecha.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
-        derecha.setPreferredSize(new Dimension(320, 0));
+        derecha.setPreferredSize(new Dimension(380, 0));
         derecha.add(new JScrollPane(txt), BorderLayout.CENTER);
         derecha.add(botones, BorderLayout.SOUTH);
 
         add(arriba, BorderLayout.NORTH);
         add(mapa, BorderLayout.CENTER);
         add(derecha, BorderLayout.EAST);
-        setSize(1180, 860);
+        setSize(1240, 860);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         info("Elija origen y destino arriba, o haga clic en dos municipios del mapa.\n\n"
@@ -149,9 +149,9 @@ public class VentanaRutas extends JFrame {
         sb.append("MENOS PARADAS (anchura)\n");
         describir(sb, paradas.camino);
         total(sb, paradas);
-        int dif = t ? paradas.minutos - rapida.minutos : paradas.km - rapida.km;
-        if (dif > 0)
-            sb.append("Menos paradas NO es lo mejor:\nDijkstra ahorra ").append(t ? Rutas.tiempo(dif) : dif + " km").append(".");
+        double dif = t ? paradas.minutos - rapida.minutos : paradas.km - rapida.km;
+        if (dif > 0.05)
+            sb.append("Menos paradas NO es lo mejor:\nDijkstra ahorra ").append(t ? Rutas.tiempo((int) dif) : Rutas.km(dif)).append(".");
         else
             sb.append("En este caso las dos rutas son igual de buenas.");
         info(sb.toString());
@@ -160,14 +160,14 @@ public class VentanaRutas extends JFrame {
     private boolean porTiempo() { return cbCriterio.getSelectedIndex() == 1; }
 
     private void total(StringBuilder sb, Rutas.Resultado r) {
-        sb.append("Total: ").append(r.km).append(" km, ").append(Rutas.tiempo(r.minutos))
+        sb.append("Total: ").append(Rutas.km(r.km)).append(", ").append(Rutas.tiempo(r.minutos))
           .append(", ").append(r.camino.length - 1).append(" vías\n\n");
     }
 
     private void describir(StringBuilder sb, int[] c) {
         for (int i = 0; i < c.length; i++) {
             if (i == 0) sb.append("  ").append(g.nombre(c[i])).append('\n');
-            else sb.append("  -> ").append(g.nombre(c[i])).append(" (+").append(g.peso(c[i - 1], c[i])).append(" km, ")
+            else sb.append("  -> ").append(g.nombre(c[i])).append(" (+").append(Rutas.km(g.peso(c[i - 1], c[i]))).append(", ")
                     .append(Rutas.tiempo(g.minutos(c[i - 1], c[i]))).append(")\n");
         }
     }
@@ -207,12 +207,12 @@ public class VentanaRutas extends JFrame {
         m.setColumnIdentifiers(cols);
         for (int i = 0; i < n; i++) {
             m.setValueAt(i + " " + g.nombre(i), i, 0);
-            for (int j = 0; j < n; j++) m.setValueAt(g.peso(i, j) == 0 ? "" : (porTiempo() ? g.minutos(i, j) : g.peso(i, j)), i, j + 1);
+            for (int j = 0; j < n; j++) m.setValueAt(g.peso(i, j) == 0 ? "" : (porTiempo() ? (Object) g.minutos(i, j) : String.format("%.1f", g.peso(i, j))), i, j + 1);
         }
         JTable t = new JTable(m);
         t.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         t.getColumnModel().getColumn(0).setPreferredWidth(170);
-        for (int j = 1; j <= n; j++) t.getColumnModel().getColumn(j).setPreferredWidth(28);
+        for (int j = 1; j <= n; j++) t.getColumnModel().getColumn(j).setPreferredWidth(40);
         JScrollPane sp = new JScrollPane(t);
         sp.setPreferredSize(new Dimension(900, 450));
         String que = porTiempo() ? "minutos" : "km";
@@ -222,9 +222,10 @@ public class VentanaRutas extends JFrame {
     private void cerrarVia() {
         int[] ab = pedirDosMunicipios("Cerrar vía");
         if (ab == null) return;
-        int km = g.peso(ab[0], ab[1]), min = g.minutos(ab[0], ab[1]);
+        double km = g.peso(ab[0], ab[1]);
+        int min = g.minutos(ab[0], ab[1]);
         if (!g.eliminarVia(ab[0], ab[1])) { info("Esos municipios no tienen una vía directa."); return; }
-        cerrados.add(new int[]{ab[0], ab[1], km, min});
+        cerrados.add(new double[]{ab[0], ab[1], km, min});
         limpiarRuta();
         info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " cerrada.\nVuelva a calcular la ruta para ver el desvío.");
     }
@@ -232,29 +233,30 @@ public class VentanaRutas extends JFrame {
     private void reabrirVia() {
         if (cerrados.isEmpty()) { info("No hay vías cerradas."); return; }
         String[] op = new String[cerrados.size()];
-        for (int i = 0; i < op.length; i++) op[i] = g.nombre(cerrados.get(i)[0]) + " - " + g.nombre(cerrados.get(i)[1]);
+        for (int i = 0; i < op.length; i++) op[i] = g.nombre((int) cerrados.get(i)[0]) + " - " + g.nombre((int) cerrados.get(i)[1]);
         Object sel = JOptionPane.showInputDialog(this, "Vía a reabrir:", "Reabrir", JOptionPane.PLAIN_MESSAGE, null, op, op[0]);
         if (sel == null) return;
-        int[] t = cerrados.remove(java.util.Arrays.asList(op).indexOf(sel));
-        g.agregarVia(t[0], t[1], t[2], t[3]);
+        double[] t = cerrados.remove(java.util.Arrays.asList(op).indexOf(sel));
+        g.agregarVia((int) t[0], (int) t[1], t[2], (int) t[3]);
         limpiarRuta();
-        info("Vía " + sel + " reabierta (" + t[2] + " km, " + Rutas.tiempo(t[3]) + ").");
+        info("Vía " + sel + " reabierta (" + Rutas.km(t[2]) + ", " + Rutas.tiempo((int) t[3]) + ").");
     }
 
     private void agregarVia() {
         int[] ab = pedirDosMunicipios("Agregar o cambiar vía");
         if (ab == null) return;
-        String s = JOptionPane.showInputDialog(this, "Kilómetros de la vía:");
+        String s = JOptionPane.showInputDialog(this, "Kilómetros de la vía (por ejemplo 12,5):");
         if (s == null) return;
         String m = JOptionPane.showInputDialog(this, "Minutos que se tarda en carro:");
         if (m == null) return;
         try {
-            int km = Integer.parseInt(s.trim()), min = Integer.parseInt(m.trim());
+            double km = Double.parseDouble(s.trim().replace(',', '.'));
+            int min = Integer.parseInt(m.trim());
             g.agregarVia(ab[0], ab[1], km, min);
             limpiarRuta();
-            info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " = " + km + " km, " + Rutas.tiempo(min) + ".");
+            info("Vía " + g.nombre(ab[0]) + " - " + g.nombre(ab[1]) + " = " + Rutas.km(km) + ", " + Rutas.tiempo(min) + ".");
         } catch (NumberFormatException e) {
-            error("Escriba números enteros de km y de minutos.");
+            error("Escriba los km (puede llevar decimales) y los minutos (entero).");
         } catch (RuntimeException e) {
             error(e.getMessage());
         }
@@ -392,7 +394,7 @@ public class VentanaRutas extends JFrame {
             // vías cerradas (rojo punteado)
             g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{6, 6}, 0));
             g2.setColor(new Color(0xE53935));
-            for (int[] t : cerrados) linea(g2, t[0], t[1]);
+            for (double[] t : cerrados) linea(g2, (int) t[0], (int) t[1]);
 
             // vías normales (las etiquetas se escriben al final)
             for (int i = 0; i < n; i++)
@@ -460,19 +462,19 @@ public class VentanaRutas extends JFrame {
             for (int i = 0; i < n; i++)
                 for (int j = i + 1; j < n; j++) {
                     if (g.peso(i, j) == 0) continue;
-                    String w = porTiempo() ? Rutas.tiempo(g.minutos(i, j)) : g.peso(i, j) + " km";
+                    String w = porTiempo() ? Rutas.tiempo(g.minutos(i, j)) : Rutas.km(g.peso(i, j));
                     Point a = pos.get(g.nombre(i)), b = pos.get(g.nombre(j));
                     int tw = fmE.stringWidth(w) + 6, th = 15;
-                    Rectangle elegido = null, centro = null;
-                    for (double t : lugares) {
+                    Rectangle elegido = null;
+                    int menosChoques = Integer.MAX_VALUE;
+                    for (double t : lugares) {                // se queda con el punto que menos tape
                         int cx = (int) (a.x + t * (b.x - a.x)), cy = (int) (a.y + t * (b.y - a.y));
                         Rectangle r = new Rectangle(cx - tw / 2, cy - th / 2, tw, th);
-                        if (centro == null) centro = r;
-                        boolean libre = true;
-                        for (Rectangle o : ocupado) if (o.intersects(r)) { libre = false; break; }
-                        if (libre) { elegido = r; break; }
+                        int choques = 0;
+                        for (Rectangle o : ocupado) if (o.intersects(r)) choques++;
+                        if (choques < menosChoques) { menosChoques = choques; elegido = r; }
+                        if (choques == 0) break;
                     }
-                    if (elegido == null) elegido = centro;   // si ningún punto está libre, se usa el del centro
                     ocupado.add(elegido);
                     g2.setColor(Color.WHITE);
                     g2.fillRoundRect(elegido.x, elegido.y, elegido.width, elegido.height, 6, 6);
